@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>polimi.deib</groupId>
-	<artifactId>csparql-rest-api</artifactId>
+	<artifactId>rsp-services-api</artifactId>
 	<version>0.3.2.1</version>
 	<packaging>jar</packaging>
 
