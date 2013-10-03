@@ -7,7 +7,7 @@
 	<version>0.3.2.1</version>
 	<packaging>jar</packaging>
 
-	<name>csparql-rest-api</name>
+	<name>rsp-services-api</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
