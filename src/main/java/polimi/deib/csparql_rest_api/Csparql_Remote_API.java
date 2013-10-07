@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013 DEIB - Politecnico di Milano
+ * Copyright 2013 Marco Balduini, Emanuele Della Valle
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,6 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * 
+ * Acknowledgements:
+ * 
+ * This work was partially supported by the European project LarKC (FP7-215535) 
+ * and by the European project MODAClouds (FP7-318484)
  ******************************************************************************/
 package polimi.deib.csparql_rest_api;
 
@@ -43,7 +48,10 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import polimi.deib.csparql_rest_api.exception.ObserverErrorException;
+import polimi.deib.csparql_rest_api.exception.QueryErrorException;
 import polimi.deib.csparql_rest_api.exception.ServerErrorException;
+import polimi.deib.csparql_rest_api.exception.StreamErrorException;
 
 import com.google.gson.Gson;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -85,8 +93,9 @@ public class Csparql_Remote_API {
 	 * @param inputStreamName name of the new stream. The name of the stream needs to be a valid URI.
 	 * @return json response from server. 
 	 * @throws ServerErrorException 
+	 * @throws StreamErrorException 
 	 */
-	public String registerStream(String inputStreamName) throws ServerErrorException{
+	public String registerStream(String inputStreamName) throws ServerErrorException, StreamErrorException{
 		HttpPut method = null;
 		String httpEntityContent;
 
@@ -111,7 +120,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while registering stream " + inputStreamName);
+				throw new StreamErrorException("Error while registering stream " + inputStreamName);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -123,8 +132,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -135,8 +144,9 @@ public class Csparql_Remote_API {
 	 * @param inputStreamName name of the stream to unregister.
 	 * @return json response from server. 
 	 * @throws ServerErrorException 
+	 * @throws StreamErrorException 
 	 */
-	public String unregisterStream(String inputStreamName) throws ServerErrorException{
+	public String unregisterStream(String inputStreamName) throws ServerErrorException, StreamErrorException{
 		HttpDelete method = null;
 		String httpEntityContent;
 
@@ -161,7 +171,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while unregistering stream " + inputStreamName);
+				throw new StreamErrorException("Error while unregistering stream " + inputStreamName);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -172,10 +182,10 @@ public class Csparql_Remote_API {
 		} catch (ClientProtocolException e) {
 			logger.error("error while calling rest service", e);
 			method.abort();
-		} catch (IOException e) {
-			logger.error("error during IO operation", e);
+		}  catch (IOException e) {
 			method.abort();
-		} 
+			throw new ServerErrorException("unreachable host");
+		}
 
 		return "Error";
 	}
@@ -186,8 +196,9 @@ public class Csparql_Remote_API {
 	 * @param RDF_Json_Serialization RDF/Json serialization of data to put into stream
 	 * @return json response from server. 
 	 * @throws ServerErrorException 
+	 * @throws StreamErrorException 
 	 */
-	public String feedStream(String inputStreamName, String RDF_Json_Serialization) throws ServerErrorException{
+	public String feedStream(String inputStreamName, String RDF_Json_Serialization) throws ServerErrorException, StreamErrorException{
 		HttpPost method = null;
 		String httpEntityContent;
 
@@ -214,7 +225,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while feeding stream " + inputStreamName);
+				throw new StreamErrorException("Error while feeding stream " + inputStreamName);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -226,8 +237,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -238,8 +249,10 @@ public class Csparql_Remote_API {
 	 * @param inputStreamName name of the stream
 	 * @param model Jena Model containing data to put into stream
 	 * @return json response from server. 
+	 * @throws StreamErrorException 
+	 * @throws ServerErrorException 
 	 */
-	public String feedStream(String inputStreamName, Model model){
+	public String feedStream(String inputStreamName, Model model) throws StreamErrorException, ServerErrorException{
 		HttpPost method = null;
 		String httpEntityContent;
 
@@ -271,7 +284,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while feeding stream " + inputStreamName);
+				throw new StreamErrorException("Error while feeding stream " + inputStreamName);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -282,13 +295,10 @@ public class Csparql_Remote_API {
 		} catch (ClientProtocolException e) {
 			logger.error("error while calling rest service", e);
 			method.abort();
-		} catch (IOException e) {
-			logger.error("error during IO operation", e);
+		}  catch (IOException e) {
 			method.abort();
-		} catch(Exception e){
-			logger.error("general Exception", e);
-			method.abort();
-		} 
+			throw new ServerErrorException("Unreachable Host");
+		}
 
 		return "Error";
 	}
@@ -298,8 +308,9 @@ public class Csparql_Remote_API {
 	 * @param inputStreamName name of the stream
 	 * @return json serialization of stream informations
 	 * @throws ServerErrorException 
+	 * @throws StreamErrorException 
 	 */
-	public String getStreamInfo(String inputStreamName) throws ServerErrorException{
+	public String getStreamInfo(String inputStreamName) throws ServerErrorException, StreamErrorException{
 		HttpGet method = null;
 		String httpEntityContent;
 
@@ -326,7 +337,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return httpEntityContent;
 			} else {
-				throw new ServerErrorException("Error while getting information about stream " + inputStreamName);
+				throw new StreamErrorException("Error while getting information about stream " + inputStreamName);
 			}
 		} catch (UnsupportedEncodingException e) {
 			logger.error("error while encoding", e);
@@ -336,9 +347,9 @@ public class Csparql_Remote_API {
 		} catch (ClientProtocolException e) {
 			logger.error("error while calling rest service", e);
 			method.abort();
-		} catch (IOException e) {
-			logger.error("error during IO operation", e);
+		}  catch (IOException e) {
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -348,8 +359,9 @@ public class Csparql_Remote_API {
 	 * Get information about all the streams registered on the engine
 	 * @return json serialization of streams informations
 	 * @throws ServerErrorException 
+	 * @throws StreamErrorException 
 	 */
-	public String getStreamsInfo() throws ServerErrorException{
+	public String getStreamsInfo() throws ServerErrorException, StreamErrorException{
 		HttpGet method = null;
 		String httpEntityContent;
 
@@ -374,9 +386,9 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return httpEntityContent;
 			} else {
-				throw new ServerErrorException("Error while getting information about streams");
+				throw new StreamErrorException("Error while getting information about streams");
 			}
-			
+
 		} catch (UnsupportedEncodingException e) {
 			logger.error("error while encoding", e);
 			method.abort();
@@ -386,9 +398,9 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
-		} 
+			throw new ServerErrorException("unreachable host");
+		}
 
 		return "Error";
 	}
@@ -402,8 +414,9 @@ public class Csparql_Remote_API {
 	 * @param queryBody string representing the query in C-SPAQRL language . 
 	 * @return json representation of query ID
 	 * @throws ServerErrorException 
+	 * @throws QueryErrorException 
 	 */
-	public String registerQuery(String queryName, String queryBody) throws ServerErrorException{
+	public String registerQuery(String queryName, String queryBody) throws ServerErrorException, QueryErrorException{
 		HttpPut method = null;
 		String httpEntityContent;
 
@@ -413,10 +426,6 @@ public class Csparql_Remote_API {
 			method = new HttpPut(uri);
 
 			method.setHeader("Cache-Control","no-cache");
-
-//			formparams = new ArrayList<BasicNameValuePair>();
-//			formparams.add(new BasicNameValuePair("querybody", queryBody));
-//			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
 
 			method.setEntity(new StringEntity(queryBody));
 
@@ -430,10 +439,10 @@ public class Csparql_Remote_API {
 			httpEntityContent = streamToString(istream);
 			if(istream.available() != 0)
 				EntityUtils.consume(httpEntity);
-			if(httpResponse.getStatusLine().getStatusCode() == 200){
+			if(httpResponse.getStatusLine().getStatusCode() == 200 && httpEntityContent != null){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while registering stream " + queryName);
+				throw new QueryErrorException("Error while registering stream " + queryName);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -445,8 +454,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -457,8 +466,9 @@ public class Csparql_Remote_API {
 	 * @param queryURI unique uri of the query
 	 * @return json response from server. 
 	 * @throws ServerErrorException 
+	 * @throws QueryErrorException 
 	 */
-	public String unregisterQuery(String queryURI) throws ServerErrorException{
+	public String unregisterQuery(String queryURI) throws ServerErrorException, QueryErrorException{
 		HttpDelete method = null;
 		String httpEntityContent;
 
@@ -484,9 +494,9 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while unregistering query " + queryURI);
+				throw new QueryErrorException("Error while unregistering query " + queryURI);
 			}
-			
+
 		} catch (UnsupportedEncodingException e) {
 			logger.error("error while encoding", e);
 			method.abort();
@@ -496,8 +506,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -508,8 +518,9 @@ public class Csparql_Remote_API {
 	 * @param queryURI unique uri of the query
 	 * @return json serialization of query informations. 
 	 * @throws ServerErrorException 
+	 * @throws QueryErrorException 
 	 */
-	public String getQueryInfo(String queryURI) throws ServerErrorException{
+	public String getQueryInfo(String queryURI) throws ServerErrorException, QueryErrorException{
 		HttpGet method = null;
 		String httpEntityContent;
 
@@ -535,9 +546,9 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return httpEntityContent;
 			} else {
-				throw new ServerErrorException("Error while getting information about query " + queryURI);
+				throw new QueryErrorException("Error while getting information about query " + queryURI);
 			}
-			
+
 		} catch (UnsupportedEncodingException e) {
 			logger.error("error while encoding", e);
 			method.abort();
@@ -547,8 +558,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -558,8 +569,9 @@ public class Csparql_Remote_API {
 	 * Method to get information about queries.
 	 * @return json serialization of queries informations. 
 	 * @throws ServerErrorException 
+	 * @throws QueryErrorException 
 	 */
-	public String getQueriesInfo() throws ServerErrorException{
+	public String getQueriesInfo() throws ServerErrorException, QueryErrorException{
 		HttpGet method = null;
 		String httpEntityContent;
 
@@ -585,9 +597,9 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return httpEntityContent;
 			} else {
-				throw new ServerErrorException("Error while getting information about queries");
+				throw new QueryErrorException("Error while getting information about queries");
 			}
-			
+
 		} catch (UnsupportedEncodingException e) {
 			logger.error("error while encoding", e);
 			method.abort();
@@ -597,8 +609,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -609,8 +621,9 @@ public class Csparql_Remote_API {
 	 * @param queryURI unique uri of the query to pause
 	 * @return json response from server
 	 * @throws ServerErrorException 
+	 * @throws QueryErrorException 
 	 */
-	public String pauseQuery(String queryURI) throws ServerErrorException{
+	public String pauseQuery(String queryURI) throws ServerErrorException, QueryErrorException{
 		HttpPost method = null;
 		String httpEntityContent;
 
@@ -640,7 +653,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while pausing query " + queryURI); 
+				throw new QueryErrorException("Error while pausing query " + queryURI); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -652,9 +665,9 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
-		} 
+			throw new ServerErrorException("unreachable host");
+		}
 
 		return "Error";
 	} 
@@ -664,8 +677,9 @@ public class Csparql_Remote_API {
 	 * @param queryURI unique uri of the query to restart
 	 * @return json response from server
 	 * @throws ServerErrorException 
+	 * @throws QueryErrorException 
 	 */
-	public String restartQuery(String queryURI) throws ServerErrorException{
+	public String restartQuery(String queryURI) throws ServerErrorException, QueryErrorException{
 		HttpPost method = null;
 		String httpEntityContent;
 
@@ -696,7 +710,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while restarting query " + queryURI); 
+				throw new QueryErrorException("Error while restarting query " + queryURI); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -708,8 +722,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -724,8 +738,9 @@ public class Csparql_Remote_API {
 	 * @param callbackUrl Callback URL needed by the server to send the results
 	 * @return Json serialization of query results
 	 * @throws ServerErrorException 
+	 * @throws ObserverErrorException 
 	 */
-	public String addObserver(String queryURI, String callbackUrl) throws ServerErrorException{
+	public String addObserver(String queryURI, String callbackUrl) throws ServerErrorException, ObserverErrorException{
 
 		HttpPost method = null;
 		String httpEntityContent;
@@ -754,7 +769,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while adding observer to query " + queryURI); 
+				throw new ObserverErrorException("Error while adding observer to query " + queryURI); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -766,9 +781,9 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
-		} 
+			throw new ServerErrorException("unreachable host");
+		}
 
 		return "Error";
 
@@ -779,8 +794,9 @@ public class Csparql_Remote_API {
 	 * @param observerURI unique uri of the observer to delete
 	 * @return json resonse from server
 	 * @throws ServerErrorException 
+	 * @throws ObserverErrorException 
 	 */
-	public String deleteObserver(String observerURI) throws ServerErrorException{
+	public String deleteObserver(String observerURI) throws ServerErrorException, ObserverErrorException{
 
 		HttpDelete method = null;
 		String httpEntityContent;
@@ -806,7 +822,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while deleting observer " + observerURI); 
+				throw new ObserverErrorException("Error while deleting observer " + observerURI); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -818,8 +834,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -831,8 +847,9 @@ public class Csparql_Remote_API {
 	 * @param observerURI unique uri of the observer to delete
 	 * @return json resonse from server
 	 * @throws ServerErrorException 
+	 * @throws ObserverErrorException 
 	 */
-	public String getObserverInformations(String observerURI) throws ServerErrorException{
+	public String getObserverInformations(String observerURI) throws ServerErrorException, ObserverErrorException{
 
 		HttpGet method = null;
 		String httpEntityContent;
@@ -858,7 +875,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while getting information about observer " + observerURI); 
+				throw new ObserverErrorException("Error while getting information about observer " + observerURI); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -870,8 +887,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		}
 
 		return "Error";
@@ -883,8 +900,9 @@ public class Csparql_Remote_API {
 	 * @param queryURI unique uri of the query observed by the observer to delete
 	 * @return json resonse from server
 	 * @throws ServerErrorException 
+	 * @throws ObserverErrorException 
 	 */
-	public String getObserversInformations(String queryURI) throws ServerErrorException{
+	public String getObserversInformations(String queryURI) throws ServerErrorException, ObserverErrorException{
 
 		HttpGet method = null;
 		String httpEntityContent;
@@ -910,7 +928,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while getting information about observers attached to query " + queryURI); 
+				throw new ObserverErrorException("Error while getting information about observers attached to query " + queryURI); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -922,15 +940,17 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
-		} 
+			throw new ServerErrorException("unreachable host");
+		}
 
 		return "Error";
 
 	}
+	
+	//Static Knowledge
 
-	public String launchUpdateQuery(String querybody) throws ServerErrorException{
+	public String launchUpdateQuery(String querybody) throws ServerErrorException, QueryErrorException{
 
 		HttpPost method = null;
 		String httpEntityContent;
@@ -942,10 +962,10 @@ public class Csparql_Remote_API {
 
 			method.setHeader("Cache-Control","no-cache");
 
-//			formparams = new ArrayList<BasicNameValuePair>();
-//			formparams.add(new BasicNameValuePair("queryBody", querybody));
-//			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
-			
+			//			formparams = new ArrayList<BasicNameValuePair>();
+			//			formparams.add(new BasicNameValuePair("queryBody", querybody));
+			//			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+
 			method.setEntity(new StringEntity(querybody));
 
 			httpResponse = client.execute(method);
@@ -961,9 +981,9 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ServerErrorException("Error while launching update query"); 
+				throw new QueryErrorException("Error while launching update query"); 
 			}
-			
+
 		} catch (UnsupportedEncodingException e) {
 			logger.error("error while encoding", e);
 			method.abort();
@@ -973,8 +993,8 @@ public class Csparql_Remote_API {
 			logger.error("error while calling rest service", e);
 			method.abort();
 		} catch (IOException e) {
-			logger.error("error during IO operation", e);
 			method.abort();
+			throw new ServerErrorException("unreachable host");
 		} 
 
 		return "Error";

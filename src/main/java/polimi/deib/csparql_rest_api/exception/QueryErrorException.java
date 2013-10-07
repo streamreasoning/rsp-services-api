@@ -18,36 +18,37 @@
  * This work was partially supported by the European project LarKC (FP7-215535) 
  * and by the European project MODAClouds (FP7-318484)
  ******************************************************************************/
-package polimi.deib.csparql_rest_api.configuration;
+package polimi.deib.csparql_rest_api.exception;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class QueryErrorException extends Exception {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-public class Config {
-	private static Config _instance = null;
-	private static final Logger logger = LoggerFactory.getLogger(Config.class); 
-	
-	private Configuration config;
-	
-	private Config(){
-		try {
-			config = new PropertiesConfiguration("setup.properties");
-		} catch (ConfigurationException e) {
-			logger.error("Error while reading the configuration file", e);
-		}
+	public QueryErrorException() {
+		// TODO Auto-generated constructor stub
 	}
-	
-	public String getServerVersion(){
-		return config.getString("csparql_server.version");
+
+	public QueryErrorException(String message) {
+		super(message);
 	}
-				
-	public static Config getInstance(){
-		if(_instance==null)
-			_instance=new Config();
-		return _instance;
+
+	public QueryErrorException(Throwable cause) {
+		super(cause);
+		// TODO Auto-generated constructor stub
 	}
+
+	public QueryErrorException(String message, Throwable cause) {
+		super(message, cause);
+		// TODO Auto-generated constructor stub
+	}
+
+	public QueryErrorException(String message, Throwable cause,
+			boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+		// TODO Auto-generated constructor stub
+	}
+
 }
