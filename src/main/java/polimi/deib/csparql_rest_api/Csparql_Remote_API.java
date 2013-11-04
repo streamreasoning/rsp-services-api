@@ -442,7 +442,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200 && httpEntityContent != null){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new QueryErrorException("Error while registering stream " + queryName);
+				throw new QueryErrorException("Error while registering query " + queryName);
 			}
 
 		} catch (UnsupportedEncodingException e) {
