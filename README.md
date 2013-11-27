@@ -12,3 +12,30 @@ Javadoc
 ------------
 
 http://streamreasoning.org/documentation/javadoc/rsp-services-csparql-api/
+
+Maven
+------------
+
+Add new maven repository to pom file
+
+<repositories>
+	....
+	<repository>
+		<id>streamreasoning_repository</id>
+		<name>Csparql server repository</name>
+		<url>http://streamreasoning.org/maven/</url>
+		<layout>default</layout>
+	</repository>
+	...
+</repositories>
+
+Dependecy
+<dependencies>
+	...
+	<dependency>
+		<groupId>polimi.deib</groupId>
+		<artifactId>rsp-services-api</artifactId>
+		<version>0.4</version>
+	</dependency>
+	...
+</dependencies>
