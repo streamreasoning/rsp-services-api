@@ -12,11 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
- * Acknowledgements:
- * 
- * This work was partially supported by the European project LarKC (FP7-215535) 
- * and by the European project MODAClouds (FP7-318484)
  ******************************************************************************/
 package polimi.deib.csparql_rest_api;
 
@@ -60,7 +55,7 @@ import com.hp.hpl.jena.rdf.model.Model;
  * @author Marco Balduini
  *
  */
-public class Csparql_Remote_API {
+public class RSP_services_csparql_API {
 
 	private String serverAddress;
 	private URI uri;
@@ -74,10 +69,10 @@ public class Csparql_Remote_API {
 	private UrlEncodedFormEntity requestParamsEntity;
 	private PoolingClientConnectionManager cm;
 
-	private Logger logger = LoggerFactory.getLogger(Csparql_Remote_API.class.getName());
+	private Logger logger = LoggerFactory.getLogger(RSP_services_csparql_API.class.getName());
 	private Gson gson;
 
-	public Csparql_Remote_API(String serverAddress) {
+	public RSP_services_csparql_API(String serverAddress) {
 		super();
 		this.serverAddress = serverAddress;
 		cm = new PoolingClientConnectionManager();
@@ -120,7 +115,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new StreamErrorException("Error while registering stream " + inputStreamName);
+				throw new StreamErrorException("Error while registering stream " + inputStreamName + ". ERROR: " + httpEntityContent);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -171,7 +166,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new StreamErrorException("Error while unregistering stream " + inputStreamName);
+				throw new StreamErrorException("Error while unregistering stream " + inputStreamName + ". ERROR: " + httpEntityContent);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -193,12 +188,12 @@ public class Csparql_Remote_API {
 	/**
 	 * Put new data into specified RDF Stream
 	 * @param inputStreamName name of the stream
-	 * @param RDF_Json_Serialization RDF/Json serialization of data to put into stream
+	 * @param RDF_Data_Serialization RDF/Json serialization of data to put into stream
 	 * @return json response from server. 
 	 * @throws ServerErrorException 
 	 * @throws StreamErrorException 
 	 */
-	public String feedStream(String inputStreamName, String RDF_Json_Serialization) throws ServerErrorException, StreamErrorException{
+	public String feedStream(String inputStreamName, String RDF_Data_Serialization) throws ServerErrorException, StreamErrorException{
 		HttpPost method = null;
 		String httpEntityContent;
 
@@ -210,7 +205,7 @@ public class Csparql_Remote_API {
 
 			method.setHeader("Cache-Control","no-cache");
 
-			method.setEntity(new StringEntity(RDF_Json_Serialization));
+			method.setEntity(new StringEntity(RDF_Data_Serialization));
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
@@ -225,7 +220,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new StreamErrorException("Error while feeding stream " + inputStreamName);
+				throw new StreamErrorException("Error while feeding stream " + inputStreamName + ". ERROR: " + httpEntityContent);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -284,7 +279,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new StreamErrorException("Error while feeding stream " + inputStreamName);
+				throw new StreamErrorException("Error while feeding stream " + inputStreamName + ". ERROR: " + httpEntityContent);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -337,7 +332,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return httpEntityContent;
 			} else {
-				throw new StreamErrorException("Error while getting information about stream " + inputStreamName);
+				throw new StreamErrorException("Error while getting information about stream " + inputStreamName + ". ERROR: " + httpEntityContent);
 			}
 		} catch (UnsupportedEncodingException e) {
 			logger.error("error while encoding", e);
@@ -386,7 +381,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return httpEntityContent;
 			} else {
-				throw new StreamErrorException("Error while getting information about streams");
+				throw new StreamErrorException("Error while getting information about streams" + ". ERROR: " + httpEntityContent);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -410,8 +405,8 @@ public class Csparql_Remote_API {
 
 	/**
 	 * Method to register a new query into the engine.
-	 * @param queryName name of the new query (this name must match to the name specified in the body)
-	 * @param queryBody string representing the query in C-SPAQRL language . 
+	 * @param queryName name of the new query (this name must match the name specified in the body)
+	 * @param queryBody string representing the query in C-SPARQL language . 
 	 * @return json representation of query ID
 	 * @throws ServerErrorException 
 	 * @throws QueryErrorException 
@@ -442,7 +437,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200 && httpEntityContent != null){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new QueryErrorException("Error while registering query " + queryName);
+				throw new QueryErrorException("Error while registering query " + queryName + ". ERROR: " + httpEntityContent);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -494,7 +489,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new QueryErrorException("Error while unregistering query " + queryURI);
+				throw new QueryErrorException("Error while unregistering query " + queryURI + ". ERROR: " + httpEntityContent);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -546,7 +541,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return httpEntityContent;
 			} else {
-				throw new QueryErrorException("Error while getting information about query " + queryURI);
+				throw new QueryErrorException("Error while getting information about query " + queryURI + ". ERROR: " + httpEntityContent);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -597,7 +592,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return httpEntityContent;
 			} else {
-				throw new QueryErrorException("Error while getting information about queries");
+				throw new QueryErrorException("Error while getting information about queries" + ". ERROR: " + httpEntityContent);
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -653,7 +648,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new QueryErrorException("Error while pausing query " + queryURI); 
+				throw new QueryErrorException("Error while pausing query " + queryURI + ". ERROR: " + httpEntityContent); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -710,7 +705,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new QueryErrorException("Error while restarting query " + queryURI); 
+				throw new QueryErrorException("Error while restarting query " + queryURI + ". ERROR: " + httpEntityContent); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -769,7 +764,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ObserverErrorException("Error while adding observer to query " + queryURI); 
+				throw new ObserverErrorException("Error while adding observer to query " + queryURI + ". ERROR: " + httpEntityContent); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -822,7 +817,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ObserverErrorException("Error while deleting observer " + observerURI); 
+				throw new ObserverErrorException("Error while deleting observer " + observerURI + ". ERROR: " + httpEntityContent); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -875,7 +870,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ObserverErrorException("Error while getting information about observer " + observerURI); 
+				throw new ObserverErrorException("Error while getting information about observer " + observerURI + ". ERROR: " + httpEntityContent); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -928,7 +923,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new ObserverErrorException("Error while getting information about observers attached to query " + queryURI); 
+				throw new ObserverErrorException("Error while getting information about observers attached to query " + queryURI + ". ERROR: " + httpEntityContent); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
@@ -949,8 +944,15 @@ public class Csparql_Remote_API {
 	}
 	
 	//Static Knowledge
-
-	public String launchUpdateQuery(String querybody) throws ServerErrorException, QueryErrorException{
+	
+	/**
+	 * Method to launch a SPARQL Update query against static knowloedge
+	 * @param queryBody string representing the query in SPARQL language . 
+	 * @return json representation of server response
+	 * @throws ServerErrorException
+	 * @throws QueryErrorException
+	 */
+	public String launchUpdateQuery(String queryBody) throws ServerErrorException, QueryErrorException{
 
 		HttpPost method = null;
 		String httpEntityContent;
@@ -966,7 +968,7 @@ public class Csparql_Remote_API {
 			//			formparams.add(new BasicNameValuePair("queryBody", querybody));
 			//			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
 
-			method.setEntity(new StringEntity(querybody));
+			method.setEntity(new StringEntity(queryBody));
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
@@ -981,7 +983,7 @@ public class Csparql_Remote_API {
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
 				return gson.fromJson(httpEntityContent, String.class);
 			} else {
-				throw new QueryErrorException("Error while launching update query"); 
+				throw new QueryErrorException("Error while launching update query" + ". ERROR: " + httpEntityContent); 
 			}
 
 		} catch (UnsupportedEncodingException e) {
