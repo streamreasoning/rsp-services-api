@@ -744,7 +744,7 @@ public class RSP_services_csparql_API {
 			uri = new URI(queryURI);
 
 			method = new HttpPost(uri);
-
+			
 			method.setHeader("Cache-Control","no-cache");
 
 			method.addHeader("content-type", "text/plain");
