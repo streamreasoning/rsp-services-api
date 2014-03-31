@@ -262,7 +262,7 @@ public class RSP_services_csparql_API {
 			StringWriter w = new StringWriter();
 
 			model.write(w,"RDF/JSON");
-
+			
 			method.addHeader("content-type", "application/json");
 			method.setEntity(new StringEntity(w.toString()));
 
