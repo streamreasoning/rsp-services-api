@@ -1,5 +1,8 @@
 /*******************************************************************************
- * Copyright 2013 Marco Balduini, Emanuele Della Valle
+ * Copyright 2014 DEIB - Politecnico di Milano
+ *  
+ * Marco Balduini (marco.balduini@polimi.it)
+ * Emanuele Della Valle (emanuele.dellavalle@polimi.it)
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,35 +15,37 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * 
+ * This work was partially supported by the European project LarKC (FP7-215535) and by the European project MODAClouds (FP7-318484)
  ******************************************************************************/
-package polimi.deib.csparql_rest_api.exception;
+package it.polimi.deib.csparql_rest_api.exception;
 
-public class QueryErrorException extends Exception {
+public class StreamErrorException extends Exception {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public QueryErrorException() {
+	public StreamErrorException() {
 		// TODO Auto-generated constructor stub
 	}
 
-	public QueryErrorException(String message) {
+	public StreamErrorException(String message) {
 		super(message);
 	}
 
-	public QueryErrorException(Throwable cause) {
+	public StreamErrorException(Throwable cause) {
 		super(cause);
 		// TODO Auto-generated constructor stub
 	}
 
-	public QueryErrorException(String message, Throwable cause) {
+	public StreamErrorException(String message, Throwable cause) {
 		super(message, cause);
 		// TODO Auto-generated constructor stub
 	}
 
-	public QueryErrorException(String message, Throwable cause,
+	public StreamErrorException(String message, Throwable cause,
 			boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 		// TODO Auto-generated constructor stub
