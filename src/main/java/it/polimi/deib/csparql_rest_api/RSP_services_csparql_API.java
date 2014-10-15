@@ -1,5 +1,8 @@
 /*******************************************************************************
- * Copyright 2013 Marco Balduini, Emanuele Della Valle
+ * Copyright 2014 DEIB - Politecnico di Milano
+ *  
+ * Marco Balduini (marco.balduini@polimi.it)
+ * Emanuele Della Valle (emanuele.dellavalle@polimi.it)
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,8 +15,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * 
+ * This work was partially supported by the European project LarKC (FP7-215535) and by the European project MODAClouds (FP7-318484)
  ******************************************************************************/
-package polimi.deib.csparql_rest_api;
+package it.polimi.deib.csparql_rest_api;
+
+import it.polimi.deib.csparql_rest_api.exception.ObserverErrorException;
+import it.polimi.deib.csparql_rest_api.exception.QueryErrorException;
+import it.polimi.deib.csparql_rest_api.exception.ServerErrorException;
+import it.polimi.deib.csparql_rest_api.exception.StaticKnowledgeErrorException;
+import it.polimi.deib.csparql_rest_api.exception.StreamErrorException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,13 +54,9 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import polimi.deib.csparql_rest_api.exception.ObserverErrorException;
-import polimi.deib.csparql_rest_api.exception.QueryErrorException;
-import polimi.deib.csparql_rest_api.exception.ServerErrorException;
-import polimi.deib.csparql_rest_api.exception.StreamErrorException;
-
 import com.google.gson.Gson;
 import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 /**
  * 
  * @author Marco Balduini
@@ -262,7 +269,7 @@ public class RSP_services_csparql_API {
 			StringWriter w = new StringWriter();
 
 			model.write(w,"RDF/JSON");
-			
+
 			method.addHeader("content-type", "application/json");
 			method.setEntity(new StringEntity(w.toString()));
 
@@ -744,7 +751,7 @@ public class RSP_services_csparql_API {
 			uri = new URI(queryURI);
 
 			method = new HttpPost(uri);
-			
+
 			method.setHeader("Cache-Control","no-cache");
 
 			method.addHeader("content-type", "text/plain");
@@ -942,9 +949,9 @@ public class RSP_services_csparql_API {
 		return "Error";
 
 	}
-	
+
 	//Static Knowledge
-	
+
 	/**
 	 * Method to launch a SPARQL Update query against static knowloedge
 	 * @param queryBody string representing the query in SPARQL language . 
@@ -958,17 +965,18 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(serverAddress + "/updatekb");
+			uri = new URI(serverAddress + "/kb");
 
 			method = new HttpPost(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			//			formparams = new ArrayList<BasicNameValuePair>();
-			//			formparams.add(new BasicNameValuePair("queryBody", querybody));
-			//			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+			formparams = new ArrayList<BasicNameValuePair>();
+			formparams.add(new BasicNameValuePair("action", "update"));
+			formparams.add(new BasicNameValuePair("queryBody", queryBody));
+			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
 
-			method.setEntity(new StringEntity(queryBody));
+			method.setEntity(requestParamsEntity);
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
@@ -1001,6 +1009,118 @@ public class RSP_services_csparql_API {
 
 		return "Error";
 
+	}
+
+	/**
+	 * Method to put new named model to the internal static knowledge
+	 * @param iri IRI of new named model
+	 * @param location location (local or remote) of the data
+	 * @return json representation of server response
+	 * @throws StaticKnowledgeErrorException 
+	 * @throws ServerErrorException
+	 * @throws URISyntaxException 
+	 * @throws QueryErrorException
+	 */
+	public String putStaticModel(String iri, String location) throws StaticKnowledgeErrorException, ServerErrorException, URISyntaxException {
+
+		HttpPost method = null;
+		String httpEntityContent;
+
+		try{
+			uri = new URI(serverAddress + "/kb");
+
+			method = new HttpPost(uri);
+
+			method.setHeader("Cache-Control","no-cache");
+			
+			if(System.getProperty("os.name").contains("Windows")){
+				if(!location.startsWith("http://") && !location.startsWith("file:/"))
+					location = "file:/" + location;
+			}else{
+				if(!location.startsWith("http://") && !location.startsWith("file://"))
+					location = "file://" + location;
+			}
+			
+			StringWriter sw = new StringWriter();
+			ModelFactory.createDefaultModel().read(location).write(sw);
+			
+			formparams = new ArrayList<BasicNameValuePair>();
+			formparams.add(new BasicNameValuePair("action", "put"));
+			formparams.add(new BasicNameValuePair("iri", iri));
+			formparams.add(new BasicNameValuePair("serialization", sw.toString()));
+			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+
+			method.setEntity(requestParamsEntity);
+
+			httpResponse = client.execute(method);
+			httpEntity = httpResponse.getEntity();
+			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
+
+			httpParams = client.getParams();
+			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
+			InputStream istream = httpEntity.getContent();
+			httpEntityContent = streamToString(istream);
+			if(istream.available() != 0)
+				EntityUtils.consume(httpEntity);
+			if(httpResponse.getStatusLine().getStatusCode() == 200){
+				return gson.fromJson(httpEntityContent, String.class);
+			} else {
+				throw new StaticKnowledgeErrorException("Eception occurred while putting new model into the internal static dataset"); 
+			}
+
+		} catch (IOException e) {
+			method.abort();
+			throw new ServerErrorException("unreachable host");
+		}
+	}
+	
+	/**
+	 * Method to remove named model from the internal static knowledge
+	 * @param iri IRI of the named model to remove
+	 * @return json representation of server response
+	 * @throws ServerErrorException 
+	 * @throws StaticKnowledgeErrorException 
+	 * @throws URISyntaxException 
+	 */
+	public String removeStaticModel(String iri) throws ServerErrorException, StaticKnowledgeErrorException, URISyntaxException{
+
+		HttpPost method = null;
+		String httpEntityContent;
+
+		try{
+			uri = new URI(serverAddress + "/kb");
+
+			method = new HttpPost(uri);
+
+			method.setHeader("Cache-Control","no-cache");
+
+			formparams = new ArrayList<BasicNameValuePair>();
+			formparams.add(new BasicNameValuePair("action", "delete"));
+			formparams.add(new BasicNameValuePair("iri", iri));
+			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+
+			method.setEntity(requestParamsEntity);
+
+			httpResponse = client.execute(method);
+			httpEntity = httpResponse.getEntity();
+			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
+
+			httpParams = client.getParams();
+			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
+			InputStream istream = httpEntity.getContent();
+			httpEntityContent = streamToString(istream);
+			if(istream.available() != 0)
+				EntityUtils.consume(httpEntity);
+			if(httpResponse.getStatusLine().getStatusCode() == 200){
+				return gson.fromJson(httpEntityContent, String.class);
+			} else {
+				throw new StaticKnowledgeErrorException("Eception occurred while deleting model from the internal static dataset"); 
+			}
+
+		} catch (IOException e) {
+			method.abort();
+			throw new ServerErrorException("unreachable host");
+		} 
 	}
 
 	private String streamToString(InputStream is){
