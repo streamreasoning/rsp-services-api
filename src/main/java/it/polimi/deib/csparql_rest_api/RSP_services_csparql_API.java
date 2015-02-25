@@ -928,7 +928,7 @@ public class RSP_services_csparql_API {
 			if(istream.available() != 0)
 				EntityUtils.consume(httpEntity);
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
-				return gson.fromJson(httpEntityContent, String.class);
+				return httpEntityContent;
 			} else {
 				throw new ObserverErrorException("Error while getting information about observers attached to query " + queryURI + ". ERROR: " + httpEntityContent); 
 			}
