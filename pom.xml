@@ -24,7 +24,7 @@ This work was partially supported by the European project LarKC (FP7-215535) and
 
 	<groupId>it.polimi.deib</groupId>
 	<artifactId>rsp-services-api</artifactId>
-	<version>0.4.5</version>
+	<version>0.4.7</version>
 	<packaging>jar</packaging>
 
 	<name>rsp-services-api</name>
