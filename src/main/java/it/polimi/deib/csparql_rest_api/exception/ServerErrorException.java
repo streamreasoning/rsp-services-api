@@ -18,33 +18,37 @@
  * 
  * This work was partially supported by the European project LarKC (FP7-215535) and by the European project MODAClouds (FP7-318484)
  ******************************************************************************/
-package eu.deib.polimi.csparql_rest_api;
+package it.polimi.deib.csparql_rest_api.exception;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+public class ServerErrorException extends Exception {
 
-public class EncodingTest {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-	public static void main(String[] args) {
-		
-		String s = "http://ex.org/stream";
-		String es = null;
-		
-		try {
-			es = URLEncoder.encode(s, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		System.out.println(es);
-		try {
-			System.out.println(URLDecoder.decode(es, "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public ServerErrorException() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public ServerErrorException(String message) {
+		super(message);
+	}
+
+	public ServerErrorException(Throwable cause) {
+		super(cause);
+		// TODO Auto-generated constructor stub
+	}
+
+	public ServerErrorException(String message, Throwable cause) {
+		super(message, cause);
+		// TODO Auto-generated constructor stub
+	}
+
+	public ServerErrorException(String message, Throwable cause,
+			boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+		// TODO Auto-generated constructor stub
 	}
 
 }
