@@ -34,16 +34,20 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
@@ -956,6 +960,65 @@ public class RSP_services_csparql_API {
 	}
 
 	//Static Knowledge
+	
+	/**
+	 * Method to evaluate a SPARQL query against static knowledge
+	 * @param queryBody string representing the construct query in SPARQL language . 
+	 * @return rdf/json representation of the query result
+	 * @throws ServerErrorException
+	 * @throws QueryErrorException
+	 */
+	public String evaluateSparqlQuery(String queryBody) throws ServerErrorException, QueryErrorException{
+		logger.debug("Evaluating query: {}", queryBody);
+		
+		HttpGet method = null;
+		String httpEntityContent;
+
+		try{
+			
+			
+			List<NameValuePair> params = new LinkedList<NameValuePair>();
+			
+			params.add(new BasicNameValuePair("query", queryBody));
+
+			String paramString = URLEncodedUtils.format(params, "utf-8");
+
+			uri = new URI(serverAddress + "/kb?" + paramString);
+
+			method = new HttpGet(uri);
+			method.setHeader("Cache-Control","no-cache");
+
+			httpResponse = client.execute(method);
+			httpEntity = httpResponse.getEntity();
+			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
+
+			httpParams = client.getParams();
+			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
+			InputStream istream = httpEntity.getContent();
+			httpEntityContent = streamToString(istream);
+			if(istream.available() != 0)
+				EntityUtils.consume(httpEntity);
+			if(httpResponse.getStatusLine().getStatusCode() == 200){
+				return httpEntityContent;
+			} else {
+				throw new QueryErrorException("Error while evaluating query" + ". ERROR: " + httpEntityContent); 
+			}
+
+		} catch (UnsupportedEncodingException e) {
+			logger.error("error while encoding", e);
+			method.abort();
+		} catch (URISyntaxException e) {
+			logger.error("error while creating URI", e);
+		} catch (ClientProtocolException e) {
+			logger.error("error while calling rest service", e);
+			method.abort();
+		} catch (IOException e) {
+			method.abort();
+			throw new ServerErrorException("unreachable host");
+		} 
+
+		return "Error";
+	}
 
 	/**
 	 * Method to launch a SPARQL Update query against static knowloedge
