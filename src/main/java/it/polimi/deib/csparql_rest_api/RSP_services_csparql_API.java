@@ -271,7 +271,9 @@ public class RSP_services_csparql_API {
 			model.write(w,"RDF/JSON");
 
 			method.addHeader("content-type", "application/json");
-			method.setEntity(new StringEntity(w.toString()));
+			String jsonModel = w.toString();
+			logger.debug("Feeding stream with model:\n{}", jsonModel);
+			method.setEntity(new StringEntity(jsonModel));
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
@@ -419,6 +421,9 @@ public class RSP_services_csparql_API {
 	 * @throws QueryErrorException 
 	 */
 	public String registerQuery(String queryName, String queryBody) throws ServerErrorException, QueryErrorException{
+		
+		logger.debug("Registering query: {}", queryBody);
+		
 		HttpPut method = null;
 		String httpEntityContent;
 
@@ -586,7 +591,7 @@ public class RSP_services_csparql_API {
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
-			System.out.println("HTTPResponse code for URI " + uri.toString() + " : " + httpResponse.getStatusLine().getStatusCode());
+			logger.debug("HTTPResponse code for URI {}: {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
 			httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
@@ -865,7 +870,7 @@ public class RSP_services_csparql_API {
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
-			System.out.println("HTTPResponse code for URI " + uri.toString() + " : " + httpResponse.getStatusLine().getStatusCode());
+			logger.debug("HTTPResponse code for URI {}: {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
 			httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
@@ -910,7 +915,7 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(queryURI);
+			uri = new URI(queryURI+"/observers");
 
 			method = new HttpGet(uri);
 
@@ -918,7 +923,7 @@ public class RSP_services_csparql_API {
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
-			System.out.println("HTTPResponse code for URI " + uri.toString() + " : " + httpResponse.getStatusLine().getStatusCode());
+			logger.debug("HTTPResponse code for URI {}: {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
 			httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
@@ -928,7 +933,7 @@ public class RSP_services_csparql_API {
 			if(istream.available() != 0)
 				EntityUtils.consume(httpEntity);
 			if(httpResponse.getStatusLine().getStatusCode() == 200){
-				return gson.fromJson(httpEntityContent, String.class);
+				return httpEntityContent;
 			} else {
 				throw new ObserverErrorException("Error while getting information about observers attached to query " + queryURI + ". ERROR: " + httpEntityContent); 
 			}
@@ -961,6 +966,8 @@ public class RSP_services_csparql_API {
 	 */
 	public String launchUpdateQuery(String queryBody) throws ServerErrorException, QueryErrorException{
 
+		logger.debug("Launching update query: {}", queryBody);
+		
 		HttpPost method = null;
 		String httpEntityContent;
 
