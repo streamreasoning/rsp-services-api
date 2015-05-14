@@ -69,26 +69,23 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 public class RSP_services_csparql_API {
 
 	private String serverAddress;
-	private URI uri;
-
-	private DefaultHttpClient client;
-	private HttpResponse httpResponse;
-	private HttpEntity httpEntity;
-	private HttpParams httpParams;
-
-	private ArrayList<BasicNameValuePair> formparams;
-	private UrlEncodedFormEntity requestParamsEntity;
-	private PoolingClientConnectionManager cm;
 
 	private Logger logger = LoggerFactory.getLogger(RSP_services_csparql_API.class.getName());
 	private Gson gson;
+
+	private PoolingClientConnectionManager cm;
 
 	public RSP_services_csparql_API(String serverAddress) {
 		super();
 		this.serverAddress = serverAddress;
 		cm = new PoolingClientConnectionManager();
-		client = new DefaultHttpClient(cm);
 		gson = new Gson();
+	}
+	
+	
+	private DefaultHttpClient getClient(){
+		DefaultHttpClient client = new DefaultHttpClient(cm);
+		return client;
 	}
 
 
@@ -104,20 +101,21 @@ public class RSP_services_csparql_API {
 	public String registerStream(String inputStreamName) throws ServerErrorException, StreamErrorException{
 		HttpPut method = null;
 		String httpEntityContent;
-
+		
 		try{
+			DefaultHttpClient client = getClient();
 
 			String encodedName = URLEncoder.encode(inputStreamName, "UTF-8");
-			uri = new URI(serverAddress + "/streams/" + encodedName);
+			URI uri = new URI(serverAddress + "/streams/" + encodedName);
 
 			method = new HttpPut(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -157,18 +155,19 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
+			DefaultHttpClient client = getClient();
 			String encodedName = URLEncoder.encode(inputStreamName, "UTF-8");
-			uri = new URI(serverAddress + "/streams/" + encodedName);
+			URI uri = new URI(serverAddress + "/streams/" + encodedName);
 
 			method = new HttpDelete(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -209,8 +208,9 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
+			DefaultHttpClient client = getClient();
 			String encodedName = URLEncoder.encode(inputStreamName, "UTF-8");
-			uri = new URI(serverAddress + "/streams/" + encodedName);
+			URI uri = new URI(serverAddress + "/streams/" + encodedName);
 
 			method = new HttpPost(uri);
 
@@ -218,11 +218,11 @@ public class RSP_services_csparql_API {
 
 			method.setEntity(new StringEntity(RDF_Data_Serialization));
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -263,8 +263,9 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
+			DefaultHttpClient client = getClient();
 			String encodedName = URLEncoder.encode(inputStreamName, "UTF-8");
-			uri = new URI(serverAddress + "/streams/" + encodedName);
+			URI uri = new URI(serverAddress + "/streams/" + encodedName);
 
 			method = new HttpPost(uri);
 
@@ -279,11 +280,11 @@ public class RSP_services_csparql_API {
 			logger.debug("Feeding stream with model:\n{}", jsonModel);
 			method.setEntity(new StringEntity(jsonModel));
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -323,18 +324,19 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
+			DefaultHttpClient client = getClient();
 			String encodedName = URLEncoder.encode(inputStreamName, "UTF-8");
-			uri = new URI(serverAddress + "/streams/" + encodedName);
+			URI uri = new URI(serverAddress + "/streams/" + encodedName);
 
 			method = new HttpGet(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 
 			InputStream istream = httpEntity.getContent();
@@ -374,17 +376,18 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(serverAddress + "/streams");
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(serverAddress + "/streams");
 
 			method = new HttpGet(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -432,7 +435,8 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(serverAddress + "/queries/" + queryName);
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(serverAddress + "/queries/" + queryName);
 
 			method = new HttpPut(uri);
 
@@ -440,11 +444,11 @@ public class RSP_services_csparql_API {
 
 			method.setEntity(new StringEntity(queryBody));
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -484,17 +488,18 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(queryURI);
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(queryURI);
 
 			method = new HttpDelete(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 
 			InputStream istream = httpEntity.getContent();
@@ -536,17 +541,18 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(queryURI);
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(queryURI);
 
 			method = new HttpGet(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 
 			InputStream istream = httpEntity.getContent();
@@ -587,17 +593,18 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(serverAddress + "/queries");
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(serverAddress + "/queries");
 
 			method = new HttpGet(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {}: {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 
 			InputStream istream = httpEntity.getContent();
@@ -639,23 +646,24 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(queryURI);
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(queryURI);
 
 			method = new HttpPost(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			formparams = new ArrayList<BasicNameValuePair>();
+			ArrayList<BasicNameValuePair> formparams = new ArrayList<BasicNameValuePair>();
 			formparams.add(new BasicNameValuePair("action", "pause"));
-			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+			UrlEncodedFormEntity requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
 
 			method.setEntity(requestParamsEntity);
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -695,23 +703,24 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(queryURI);
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(queryURI);
 
 			method = new HttpPost(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			formparams = new ArrayList<BasicNameValuePair>();
+			ArrayList<BasicNameValuePair> formparams = new ArrayList<BasicNameValuePair>();
 			formparams.add(new BasicNameValuePair("action", "restart"));
-			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+			UrlEncodedFormEntity requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
 
 			method.setEntity(requestParamsEntity);
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 
 			InputStream istream = httpEntity.getContent();
@@ -753,24 +762,54 @@ public class RSP_services_csparql_API {
 	 */
 	public String addObserver(String queryURI, String callbackUrl) throws ServerErrorException, ObserverErrorException{
 
+		return addHttpObserver(queryURI, callbackUrl, "RDF/JSON"); 
+
+	}
+
+	/**
+	 * Method to attach new http observer to query.
+	 * @param queryURI unique uri of the query to attach observer
+	 * @param callbackUrl Callback URL needed by the server to send the results
+	 * @param format Format of the output sent to the observer (e.g., "RDF/JSON")
+	 * @return Json serialization of query results
+	 * @throws ServerErrorException 
+	 * @throws ObserverErrorException 
+	 */
+	public String addHttpObserver(String queryURI, String callbackUrl, String format) throws ServerErrorException, ObserverErrorException{
+		
+		try {
+			ArrayList<BasicNameValuePair> formparams = new ArrayList<BasicNameValuePair>();
+			formparams.add(new BasicNameValuePair("callbackUrl", callbackUrl));
+			formparams.add(new BasicNameValuePair("format", format));
+			formparams.add(new BasicNameValuePair("protocol", "HTTP"));
+			UrlEncodedFormEntity requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+			
+			return addObserver(queryURI, requestParamsEntity);
+		} catch (UnsupportedEncodingException e){
+			logger.error("error while encoding", e);
+		}
+		return "Error";
+	}
+	
+	private String addObserver(String queryURI, UrlEncodedFormEntity requestParamsEntity) throws ObserverErrorException, ServerErrorException{
 		HttpPost method = null;
 		String httpEntityContent;
 
-		try{
-			uri = new URI(queryURI);
+		try{	
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(queryURI + "/observers");
 
 			method = new HttpPost(uri);
+			
+			method.setEntity(requestParamsEntity);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			method.addHeader("content-type", "text/plain");
-			method.setEntity(new StringEntity(callbackUrl));
-
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 
 			InputStream istream = httpEntity.getContent();
@@ -797,8 +836,35 @@ public class RSP_services_csparql_API {
 		}
 
 		return "Error";
-
 	}
+	
+	/**
+	 * Method to attach new socket observer to query.
+	 * @param queryURI unique uri of the query to attach observer
+	 * @param observerHost observer host needed by the server to send the results
+	 * @param observerPort observer port needed by the server to send the results
+	 * @param protocol protocol to use for sending results to the observers ("TCP", "UDP")
+	 * @param format format of the output sent to the observer (e.g., "RDF/JSON")
+	 * @return Json serialization of query results
+	 * @throws ServerErrorException 
+	 * @throws ObserverErrorException 
+	 */
+	public String addSocketObserver(String queryURI, String observerHost, int observerPort, String protocol, String format) throws ServerErrorException, ObserverErrorException{
+		
+		try{
+			ArrayList<BasicNameValuePair> formparams = new ArrayList<BasicNameValuePair>();
+			formparams.add(new BasicNameValuePair("observerHost", observerHost));
+			formparams.add(new BasicNameValuePair("observerPort", Integer.toString(observerPort)));
+			formparams.add(new BasicNameValuePair("protocol", protocol));
+			formparams.add(new BasicNameValuePair("format", format));
+			UrlEncodedFormEntity requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+			return addObserver(queryURI, requestParamsEntity);
+		} catch (UnsupportedEncodingException e) {
+			logger.error("error while encoding", e);
+		} 
+		return "Error";
+	}
+	
 
 	/**
 	 * Method to delete observer
@@ -813,17 +879,18 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(observerURI);
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(observerURI);
 
 			method = new HttpDelete(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI " + uri.toString() + " : " + httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 
 			InputStream istream = httpEntity.getContent();
@@ -866,17 +933,18 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(observerURI);
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(observerURI);
 
 			method = new HttpGet(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {}: {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 
 			InputStream istream = httpEntity.getContent();
@@ -919,17 +987,18 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(queryURI+"/observers");
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(queryURI+"/observers");
 
 			method = new HttpGet(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {}: {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 
 			InputStream istream = httpEntity.getContent();
@@ -975,7 +1044,7 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			
+			DefaultHttpClient client = getClient();
 			
 			List<NameValuePair> params = new LinkedList<NameValuePair>();
 			
@@ -983,16 +1052,16 @@ public class RSP_services_csparql_API {
 
 			String paramString = URLEncodedUtils.format(params, "utf-8");
 
-			uri = new URI(serverAddress + "/kb?" + paramString);
+			URI uri = new URI(serverAddress + "/kb?" + paramString);
 
 			method = new HttpGet(uri);
 			method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -1035,24 +1104,25 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(serverAddress + "/kb");
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(serverAddress + "/kb");
 
 			method = new HttpPost(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			formparams = new ArrayList<BasicNameValuePair>();
+			ArrayList<BasicNameValuePair> formparams = new ArrayList<BasicNameValuePair>();
 			formparams.add(new BasicNameValuePair("action", "update"));
 			formparams.add(new BasicNameValuePair("queryBody", queryBody));
-			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+			UrlEncodedFormEntity requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
 
 			method.setEntity(requestParamsEntity);
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -1097,7 +1167,8 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(serverAddress + "/kb");
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(serverAddress + "/kb");
 
 			method = new HttpPost(uri);
 
@@ -1114,19 +1185,19 @@ public class RSP_services_csparql_API {
 			StringWriter sw = new StringWriter();
 			ModelFactory.createDefaultModel().read(location).write(sw);
 			
-			formparams = new ArrayList<BasicNameValuePair>();
+			ArrayList<BasicNameValuePair> formparams = new ArrayList<BasicNameValuePair>();
 			formparams.add(new BasicNameValuePair("action", "put"));
 			formparams.add(new BasicNameValuePair("iri", iri));
 			formparams.add(new BasicNameValuePair("serialization", sw.toString()));
-			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+			HttpEntity requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
 
 			method.setEntity(requestParamsEntity);
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
@@ -1158,24 +1229,25 @@ public class RSP_services_csparql_API {
 		String httpEntityContent;
 
 		try{
-			uri = new URI(serverAddress + "/kb");
+			DefaultHttpClient client = getClient();
+			URI uri = new URI(serverAddress + "/kb");
 
 			method = new HttpPost(uri);
 
 			method.setHeader("Cache-Control","no-cache");
 
-			formparams = new ArrayList<BasicNameValuePair>();
+			ArrayList<BasicNameValuePair> formparams = new ArrayList<BasicNameValuePair>();
 			formparams.add(new BasicNameValuePair("action", "delete"));
 			formparams.add(new BasicNameValuePair("iri", iri));
-			requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+			UrlEncodedFormEntity requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
 
 			method.setEntity(requestParamsEntity);
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
+			HttpResponse httpResponse = client.execute(method);
+			HttpEntity httpEntity = httpResponse.getEntity();
 			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
 
-			httpParams = client.getParams();
+			HttpParams httpParams = client.getParams();
 			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
 			InputStream istream = httpEntity.getContent();
 			httpEntityContent = streamToString(istream);
