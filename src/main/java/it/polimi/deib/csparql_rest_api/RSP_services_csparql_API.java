@@ -20,6 +20,8 @@
  ******************************************************************************/
 package it.polimi.deib.csparql_rest_api;
 
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import it.polimi.deib.csparql_rest_api.exception.ObserverErrorException;
 import it.polimi.deib.csparql_rest_api.exception.QueryErrorException;
 import it.polimi.deib.csparql_rest_api.exception.ServerErrorException;
@@ -55,8 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 /**
  * 
  * @author Marco Balduini
@@ -90,56 +90,61 @@ public class RSP_services_csparql_API {
 
 	//Streams
 
-	/**
-	 * Register new RDF Stream into engine
-	 * @param inputStreamName name of the new stream. The name of the stream needs to be a valid URI.
-	 * @return json response from server. 
-	 * @throws ServerErrorException 
-	 * @throws StreamErrorException 
-	 */
-	public String registerStream(String inputStreamName) throws ServerErrorException, StreamErrorException{
-		HttpPut method = null;
-		String httpEntityContent;
+    /**
+     * Register new RDF Stream into engine
+     * @param inputStreamName name of the new stream. The name of the stream needs to be a valid URI.
+     * @return json response from server.
+     * @throws ServerErrorException
+     * @throws StreamErrorException
+     */
+    public String registerStream(String inputStreamName) throws ServerErrorException, StreamErrorException{
+        HttpPut method = null;
+        String httpEntityContent;
 
-		try{
+        try{
 
-			String encodedName = URLEncoder.encode(inputStreamName, "UTF-8");
-			uri = new URI(serverAddress + "/streams/" + encodedName);
+            uri = new URI(serverAddress + "/streams/");
 
-			method = new HttpPut(uri);
+            method = new HttpPut(uri);
 
-			method.setHeader("Cache-Control","no-cache");
+            method.setHeader("Cache-Control","no-cache");
 
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
-			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
-			httpParams = client.getParams();
-			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
-			InputStream istream = httpEntity.getContent();
-			httpEntityContent = streamToString(istream);
-			if(istream.available() != 0)
-				EntityUtils.consume(httpEntity);
-			if(httpResponse.getStatusLine().getStatusCode() == 200){
-				return gson.fromJson(httpEntityContent, String.class);
-			} else {
-				throw new StreamErrorException("Error while registering stream " + inputStreamName + ". ERROR: " + httpEntityContent);
-			}
+            formparams = new ArrayList<BasicNameValuePair>();
+            formparams.add(new BasicNameValuePair("streamIri",inputStreamName));
+            requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
 
-		} catch (UnsupportedEncodingException e) {
-			logger.error("error while encoding", e);
-			method.abort();
-		} catch (URISyntaxException e) {
-			logger.error("error while creating URI", e);
-		} catch (ClientProtocolException e) {
-			logger.error("error while calling rest service", e);
-			method.abort();
-		} catch (IOException e) {
-			method.abort();
-			throw new ServerErrorException("unreachable host");
-		}
+            method.setEntity(requestParamsEntity);
 
-		return "Error";
-	}
+            httpResponse = client.execute(method);
+            httpEntity = httpResponse.getEntity();
+            logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
+            httpParams = client.getParams();
+            HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
+            InputStream istream = httpEntity.getContent();
+            httpEntityContent = streamToString(istream);
+            if(istream.available() != 0)
+                EntityUtils.consume(httpEntity);
+            if(httpResponse.getStatusLine().getStatusCode() == 200){
+                return gson.fromJson(httpEntityContent, String.class);
+            } else {
+                throw new StreamErrorException("Error while registering stream " + inputStreamName + ". ERROR: " + httpEntityContent);
+            }
+
+        } catch (UnsupportedEncodingException e) {
+            logger.error("error while encoding", e);
+            method.abort();
+        } catch (URISyntaxException e) {
+            logger.error("error while creating URI", e);
+        } catch (ClientProtocolException e) {
+            logger.error("error while calling rest service", e);
+            method.abort();
+        } catch (IOException e) {
+            method.abort();
+            throw new ServerErrorException("unreachable host");
+        }
+
+        return "Error";
+    }
 
 	/**
 	 * Unregister specified RDF Stream from engine
@@ -149,16 +154,21 @@ public class RSP_services_csparql_API {
 	 * @throws StreamErrorException 
 	 */
 	public String unregisterStream(String inputStreamName) throws ServerErrorException, StreamErrorException{
-		HttpDelete method = null;
+		HttpPost method = null;
 		String httpEntityContent;
 
 		try{
-			String encodedName = URLEncoder.encode(inputStreamName, "UTF-8");
-			uri = new URI(serverAddress + "/streams/" + encodedName);
+			uri = new URI(serverAddress + "/streams/");
 
-			method = new HttpDelete(uri);
+			method = new HttpPost(uri);
 
 			method.setHeader("Cache-Control","no-cache");
+
+            formparams = new ArrayList<BasicNameValuePair>();
+            formparams.add(new BasicNameValuePair("action","DELETE"));
+            formparams.add(new BasicNameValuePair("streamIri",inputStreamName));
+            requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+            method.setEntity(requestParamsEntity);
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
@@ -212,7 +222,12 @@ public class RSP_services_csparql_API {
 
 			method.setHeader("Cache-Control","no-cache");
 
-			method.setEntity(new StringEntity(RDF_Data_Serialization));
+            formparams = new ArrayList<BasicNameValuePair>();
+            formparams.add(new BasicNameValuePair("action","FEED"));
+            formparams.add(new BasicNameValuePair("payload",RDF_Data_Serialization));
+            formparams.add(new BasicNameValuePair("streamIri",inputStreamName));
+            requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+            method.setEntity(requestParamsEntity);
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
@@ -273,7 +288,13 @@ public class RSP_services_csparql_API {
 			method.addHeader("content-type", "application/json");
 			String jsonModel = w.toString();
 			logger.debug("Feeding stream with model:\n{}", jsonModel);
-			method.setEntity(new StringEntity(jsonModel));
+
+            formparams = new ArrayList<BasicNameValuePair>();
+            formparams.add(new BasicNameValuePair("action","FEED"));
+            formparams.add(new BasicNameValuePair("payload",jsonModel));
+            formparams.add(new BasicNameValuePair("streamIri",inputStreamName));
+            requestParamsEntity = new UrlEncodedFormEntity(formparams, "UTF-8");
+            method.setEntity(requestParamsEntity);
 
 			httpResponse = client.execute(method);
 			httpEntity = httpResponse.getEntity();
@@ -307,57 +328,57 @@ public class RSP_services_csparql_API {
 		return "Error";
 	}
 
-	/**
-	 * Get information about specific stream
-	 * @param inputStreamName name of the stream
-	 * @return json serialization of stream informations
-	 * @throws ServerErrorException 
-	 * @throws StreamErrorException 
-	 */
-	public String getStreamInfo(String inputStreamName) throws ServerErrorException, StreamErrorException{
-		HttpGet method = null;
-		String httpEntityContent;
-
-		try{
-			String encodedName = URLEncoder.encode(inputStreamName, "UTF-8");
-			uri = new URI(serverAddress + "/streams/" + encodedName);
-
-			method = new HttpGet(uri);
-
-			method.setHeader("Cache-Control","no-cache");
-
-			httpResponse = client.execute(method);
-			httpEntity = httpResponse.getEntity();
-			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
-
-			httpParams = client.getParams();
-			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
-
-			InputStream istream = httpEntity.getContent();
-			httpEntityContent = streamToString(istream);
-			if(istream.available() != 0)
-				EntityUtils.consume(httpEntity);
-
-			if(httpResponse.getStatusLine().getStatusCode() == 200){
-				return httpEntityContent;
-			} else {
-				throw new StreamErrorException("Error while getting information about stream " + inputStreamName + ". ERROR: " + httpEntityContent);
-			}
-		} catch (UnsupportedEncodingException e) {
-			logger.error("error while encoding", e);
-			method.abort();
-		} catch (URISyntaxException e) {
-			logger.error("error while creating URI", e);
-		} catch (ClientProtocolException e) {
-			logger.error("error while calling rest service", e);
-			method.abort();
-		}  catch (IOException e) {
-			method.abort();
-			throw new ServerErrorException("unreachable host");
-		}
-
-		return "Error";
-	}
+//	/**
+//	 * Get information about specific stream
+//	 * @param inputStreamName name of the stream
+//	 * @return json serialization of stream informations
+//	 * @throws ServerErrorException
+//	 * @throws StreamErrorException
+//	 */
+//	public String getStreamInfo(String inputStreamName) throws ServerErrorException, StreamErrorException{
+//		HttpGet method = null;
+//		String httpEntityContent;
+//
+//		try{
+//			String encodedName = URLEncoder.encode(inputStreamName, "UTF-8");
+//			uri = new URI(serverAddress + "/streams/" + encodedName);
+//
+//			method = new HttpGet(uri);
+//
+//			method.setHeader("Cache-Control","no-cache");
+//
+//			httpResponse = client.execute(method);
+//			httpEntity = httpResponse.getEntity();
+//			logger.debug("HTTPResponse code for URI {} : {}",uri.toString(),httpResponse.getStatusLine().getStatusCode());
+//
+//			httpParams = client.getParams();
+//			HttpConnectionParams.setConnectionTimeout(httpParams, 30000);
+//
+//			InputStream istream = httpEntity.getContent();
+//			httpEntityContent = streamToString(istream);
+//			if(istream.available() != 0)
+//				EntityUtils.consume(httpEntity);
+//
+//			if(httpResponse.getStatusLine().getStatusCode() == 200){
+//				return httpEntityContent;
+//			} else {
+//				throw new StreamErrorException("Error while getting information about stream " + inputStreamName + ". ERROR: " + httpEntityContent);
+//			}
+//		} catch (UnsupportedEncodingException e) {
+//			logger.error("error while encoding", e);
+//			method.abort();
+//		} catch (URISyntaxException e) {
+//			logger.error("error while creating URI", e);
+//		} catch (ClientProtocolException e) {
+//			logger.error("error while calling rest service", e);
+//			method.abort();
+//		}  catch (IOException e) {
+//			method.abort();
+//			throw new ServerErrorException("unreachable host");
+//		}
+//
+//		return "Error";
+//	}
 
 	/**
 	 * Get information about all the streams registered on the engine
